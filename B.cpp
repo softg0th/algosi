@@ -1,79 +1,68 @@
 #include <iostream>
-#include <string>
 #include <vector>
 
-unsigned int currentBroad = 0;
+class BitArray {
+private:
+    std::vector<unsigned int> arr;
+    unsigned int numOnes;
 
-void computeLPSArray(std::string pattern, std::vector<unsigned int>& lps, unsigned int m) {
-  unsigned int suffixLen = 0;
-  lps[0] = 0;
-  unsigned int i = 1;
-  while (i < m) {
-    if (pattern[i] == pattern[suffixLen]) {
-      suffixLen++;
-      lps[i] = suffixLen;
-      i++;
-    } else {
-      if (suffixLen != 0) {
-        suffixLen = lps[suffixLen - 1];
-      } else {
-        lps[i] = 0;
-        i++;
-      }
-    }
-  }
-}
+public:
+    BitArray(size_t size) : arr(size, 0), numOnes(0) {}
 
-bool processKMPSearch(std::string txt, std::string pat, unsigned int& currentPosition) {
-  unsigned int m = pat.size();
-  unsigned int n = txt.size();
-  std::vector<unsigned int> lps(m);
-  computeLPSArray(pat, lps, m);
-  unsigned int i = currentPosition;
-  unsigned int j = 0;
+    void performOperation(char operation, unsigned int position) {
+        if (operation == '+') {
+            addBit(position);
+        } else if (operation == '-') {
+            removeBit(position);
+        }
+        std::cout << numOnes << std::endl;
+    }
 
-  while (i < n) {
-    if (pat[j] == txt[i]) {
-      j++;
-      i++;
+private:
+    void addBit(unsigned int position) {
+        if (arr[position]) {
+            unsigned int firstIndex = position;
+            do {
+                numOnes -= 1;
+                arr[firstIndex] = 0;
+                firstIndex += 1;
+            } while (arr[firstIndex] == 1);
+            arr[firstIndex] = 1;
+            numOnes++;
+            return;
+        }
+        numOnes += 1;
+        arr[position] = 1;
     }
-    if (j == m) {
-      currentPosition = i;
-      return true;
-    } else if (i < n && pat[j] != txt[i]) {
-      if (j != 0) {
-        j = lps[j - 1];
-      } else {
-        i++;
-      }
+
+    void removeBit(unsigned int position) {
+        if (!arr[position]) {
+            unsigned int firstIndex = position;
+            do {
+                numOnes += 1;
+                arr[firstIndex] = 1;
+                firstIndex += 1;
+            } while (arr[firstIndex] == 0);
+            numOnes -= 1;
+            arr[firstIndex] = 0;
+            return;
+        }
+        arr[position] = 0;
+        numOnes -= 1;
     }
-  }
-  return false;
-}
+};
 
 int main() {
-  unsigned int n, m;
-  std::string text;
-  bool isMatch = false;
-  std::cin >> n >> m;
-  std::cin >> text;
-  unsigned int currentPosition = 0;
+    unsigned int numOperations;
+    std::cin >> numOperations;
+    BitArray bitArray(1000016);
 
-  for (unsigned int i = 0; i < m; ++i) {
-    std::string word;
-    std::cin >> word;
-
-    isMatch = processKMPSearch(text, word, currentPosition);
-    if (!isMatch) {
-      std::cout << "NO" << std::endl;
-      return 0;
+    for (unsigned int i = 0; i < numOperations; ++i) {
+        char operation;
+        unsigned int position;
+        std::cin >> operation >> position;
+        bitArray.performOperation(operation, position);
     }
 
-    if (i < m - 1 && currentPosition < n) {
-      currentPosition++;
-    }
-  }
-
-  std::cout << "YES" << std::endl;
-  return 0;
+    return 0;
 }
